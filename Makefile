@@ -2,8 +2,8 @@
 TARGET = main.out
 
 # Компилятор и флаги
-CXX = g++
-CXXFLAGS = -std=c++11 -fopenmp
+CXX = mpixlC
+CXXFLAGS = -std=c++11 -qsmp=omp
 
 # Список файлов
 SRC = main.cpp

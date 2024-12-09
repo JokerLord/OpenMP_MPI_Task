@@ -33,29 +33,41 @@ public:
         return waveFunction.calcValue(x, y, z, t);
     }
 
-    void initializeGridT0(Grid &gridT0) const {
+    void initializeGridT0(Grid &gridT0, size_t *startIndices) const {
         #pragma omp parallel for collapse(3)
-        for (size_t i = 0; i < gridT0.dimX; ++i) {
-            for (size_t j = 0; j < gridT0.dimY; ++j) {
-                for (size_t k = 0; k < gridT0.dimZ; ++k) {
-                    gridT0.setValue(i, j, k, analyticalValue(gridT0, i, j, k, 0));
+        for (size_t i = 1; i < gridT0.dimX - 1; ++i) {
+            for (size_t j = 1; j < gridT0.dimY - 1; ++j) {
+                for (size_t k = 1; k < gridT0.dimZ - 1; ++k) {
+                    double analVal = analyticalValue(gridT0,
+                                                     i + startIndices[0] - 1,
+                                                     j + startIndices[1] - 1,
+                                                     k + startIndices[2] - 1,
+                                                     0
+                                     );
+                    gridT0.setValue(i, j, k, analVal);
                 }
             }
         }
     }
 
-    double initializeGridT1(Grid &gridT0, Grid &gridT1) const {
+    double initializeGridT1(Grid &gridT0, Grid &gridT1, size_t *startIndices) const {
         double maxError = 0.0;
 
         #pragma omp parallel for collapse(3) reduction(max:maxError)
         for (size_t i = 1; i < gridT1.dimX - 1; ++i) {
             for (size_t j = 1; j < gridT1.dimY - 1; ++j) {
-                for (size_t k = 1; k < gridT1.dimZ -1; ++k) {
+                for (size_t k = 2; k < gridT1.dimZ - 2; ++k) {
                     double uT0 = gridT0.getValue(i, j, k);
                     double uT1 = uT0 + (timeStep * timeStep / 2.0) * gridT0.calcLaplace(i, j, k);
                     gridT1.setValue(i, j, k, uT1);
 
-                    double error = std::fabs(uT1 - analyticalValue(gridT1, i, j, k, timeStep));
+                    double analValue = analyticalValue(gridT1,
+                                                        i + startIndices[0] - 1,
+                                                        j + startIndices[1] - 1,
+                                                        k + startIndices[2] - 1,
+                                                        timeStep);
+
+                    double error = std::fabs(uT1 - analValue);
 
                     maxError = std::max(maxError, error);
                 }
@@ -65,17 +77,23 @@ public:
         return maxError;
     }
 
-    double updateGrid(Grid &prevGrid, Grid &curGrid, Grid &nextGrid, double t) const {
+    double updateGrid(Grid &prevGrid, Grid &curGrid, Grid &nextGrid, double t, size_t *startIndices) const {
         double maxError = 0.0;
 
         #pragma omp parallel for collapse(3) reduction(max:maxError)
-        for (size_t i = 0; i < nextGrid.dimX; ++i) {
-            for (size_t j = 0; j < nextGrid.dimY; ++j) {
-                for (size_t k = 1; k < nextGrid.dimZ - 1; ++k) {
+        for (size_t i = 1; i < nextGrid.dimX - 1; ++i) {
+            for (size_t j = 1; j < nextGrid.dimY - 1; ++j) {
+                for (size_t k = 2; k < nextGrid.dimZ - 2; ++k) {
                     double newValue = 2 * curGrid.getValue(i, j, k) - prevGrid.getValue(i, j, k) + timeStep * timeStep * curGrid.calcLaplace(i, j, k);
                     nextGrid.setValue(i, j, k, newValue);
 
-                    double error = std::fabs(newValue - analyticalValue(nextGrid, i, j, k, t));
+                    double analValue = analyticalValue(nextGrid,
+                                                       i + startIndices[0] - 1,
+                                                       j + startIndices[1] - 1,
+                                                       k + startIndices[2] - 1,
+                                                       t);
+
+                    double error = std::fabs(newValue - analValue);
 
                     maxError = std::max(maxError, error);
                 }
@@ -86,6 +104,6 @@ public:
     }
 
     void move(Grid &dst, Grid &src) {
-        std::swap(dst, src);
+        std::swap(dst.values, src.values);
     }
 };
