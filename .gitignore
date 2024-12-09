@@ -1,0 +1,7 @@
+id_rsa_hpc
+id_rsa_hpc.pub
+
+*.out
+*.txt
+
+.vscode/
