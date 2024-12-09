@@ -120,7 +120,7 @@ int main(int argc, char *argv[]) {
 
     double timeStep = T / (double) timePointNum;
 
-    GridUpdater gridUpdater(Lx, Ly, Lz, timeStep);
+    GridUpdater gridUpdater(Lx, Ly, Lz, timeStep, spatialPointNum);
 
     Grid prevGrid = Grid(spatialPointNum, Lx, Ly, Lz, paddedBlockSize[0], paddedBlockSize[1], paddedBlockSize[2], blockStartIndices);
     Grid curGrid = Grid(spatialPointNum, Lx, Ly, Lz, paddedBlockSize[0], paddedBlockSize[1], paddedBlockSize[2], blockStartIndices);

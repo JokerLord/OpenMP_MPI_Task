@@ -22,9 +22,10 @@ public:
 class GridUpdater {
     const WaveEquationSolution waveFunction;
     const double timeStep;
+    const size_t pointNum;
 
 public:
-    GridUpdater(double Lx, double Ly, double Lz, double timeStep) : waveFunction(Lx, Ly, Lz), timeStep(timeStep) {}
+    GridUpdater(double Lx, double Ly, double Lz, double timeStep, size_t spatialPointNum) : waveFunction(Lx, Ly, Lz), timeStep(timeStep), pointNum(spatialPointNum) {}
 
     double analyticalValue(const Grid &grid, size_t i, size_t j, size_t k, double t) const {
         double x = i * grid.stepX;
@@ -53,10 +54,13 @@ public:
     double initializeGridT1(Grid &gridT0, Grid &gridT1, size_t *startIndices) const {
         double maxError = 0.0;
 
+        size_t isFrontEdge = (startIndices[2] == 0) ? 1 : 0;
+        size_t isBackEdge = (startIndices[2] + gridT1.dimZ - 2 == pointNum) ? 1 : 0;
+
         #pragma omp parallel for collapse(3) reduction(max:maxError)
         for (size_t i = 1; i < gridT1.dimX - 1; ++i) {
             for (size_t j = 1; j < gridT1.dimY - 1; ++j) {
-                for (size_t k = 2; k < gridT1.dimZ - 2; ++k) {
+                for (size_t k = 1 + isFrontEdge; k < gridT1.dimZ - 1 - isBackEdge; ++k) {
                     double uT0 = gridT0.getValue(i, j, k);
                     double uT1 = uT0 + (timeStep * timeStep / 2.0) * gridT0.calcLaplace(i, j, k);
                     gridT1.setValue(i, j, k, uT1);
@@ -80,10 +84,13 @@ public:
     double updateGrid(Grid &prevGrid, Grid &curGrid, Grid &nextGrid, double t, size_t *startIndices) const {
         double maxError = 0.0;
 
+        size_t isFrontEdge = (startIndices[2] == 0) ? 1 : 0;
+        size_t isBackEdge = (startIndices[2] + nextGrid.dimZ - 2 == pointNum) ? 1 : 0;
+
         #pragma omp parallel for collapse(3) reduction(max:maxError)
         for (size_t i = 1; i < nextGrid.dimX - 1; ++i) {
             for (size_t j = 1; j < nextGrid.dimY - 1; ++j) {
-                for (size_t k = 2; k < nextGrid.dimZ - 2; ++k) {
+                for (size_t k = 1 + isFrontEdge; k < nextGrid.dimZ - 1 - isBackEdge; ++k) {
                     double newValue = 2 * curGrid.getValue(i, j, k) - prevGrid.getValue(i, j, k) + timeStep * timeStep * curGrid.calcLaplace(i, j, k);
                     nextGrid.setValue(i, j, k, newValue);
 
