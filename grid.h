@@ -72,73 +72,40 @@ public:
     }
 
     void fillBoundary() {
-        if (startIndices[1] + dimY - 2 == globalPointNum) {
-            // std::cout << "CUNTupper" << std::endl;
-            #pragma omp parallel for collapse(2)
-            for (int i = 1; i < dimX - 1; ++i) {
-                for (int k = 1; k < dimZ - 1; ++k) {
-                    upperPart1[calcBoundaryIndex(i, k, dimZ)] = getValue(i, dimY - 3, k);
-                    // std::cout << upperPart1[calcBoundaryIndex(i, k, dimZ)] << " ";
-                }
-                // std::cout << std::endl;
-            }
-        } else {
-            #pragma omp parallel for collapse(2)
-            for (int i = 1; i < dimX - 1; ++i) {
-                for (int k = 1; k < dimZ - 1; ++k) {
-                    upperPart1[calcBoundaryIndex(i, k, dimZ)] = getValue(i, dimY - 2, k);
-                }
+        size_t upperBoundaryY = (startIndices[1] + dimY - 2 == globalPointNum) ? (dimY - 3) : (dimY - 2);
+        size_t rightBoundaryX = (startIndices[0] + dimX - 2 == globalPointNum) ? (dimX - 3) : (dimX - 2);
+        size_t lowerBoundaryY = (startIndices[1] == 0) ? 2 : 1;
+        size_t leftBoundaryX = (startIndices[0] == 0) ? 2 : 1;
+
+        size_t sliceSize = (dimZ - 2) * sizeof(double);
+        size_t rowSize   = (dimY - 2) * sizeof(double);
+
+
+        #pragma omp parallel for collapse(2)
+        for (int i = 1; i < dimX - 1; ++i) {
+            for (int k = 1; k < dimZ - 1; ++k) {
+                upperPart1[calcBoundaryIndex(i, k, dimZ)] = getValue(i, upperBoundaryY, k);
             }
         }
 
-        if (startIndices[0] + dimX - 2 == globalPointNum) {
-            // std::cout << "CUNTright" << std::endl;
-            #pragma omp parallel for collapse(2)
-            for (int j = 1; j < dimY - 1; ++j) {
-                for (int k = 1; k < dimZ - 1; ++k) {
-                    rightPart1[calcBoundaryIndex(j, k, dimZ)] = getValue(dimX - 3, j, k);
-                }
-            }
-        } else {
-            #pragma omp parallel for collapse(2)
-            for (int j = 1; j < dimY - 1; ++j) {
-                for (int k = 1; k < dimZ - 1; ++k) {
-                    rightPart1[calcBoundaryIndex(j, k, dimZ)] = getValue(dimX - 2, j, k);
-                }
+        #pragma omp parallel for collapse(2)
+        for (int i = 1; i < dimX - 1; ++i) {
+            for (int k = 1; k < dimZ - 1; ++k) {
+                lowerPart1[calcBoundaryIndex(i, k, dimZ)] = getValue(i, lowerBoundaryY, k);
             }
         }
 
-        if (startIndices[1] == 0) {
-            // std::cout << "CUNTlower" << std::endl;
-            #pragma omp parallel for collapse(2)
-            for (int i = 1; i < dimX - 1; ++i) {
-                for (int k = 1; k < dimZ - 1; ++k) {
-                    lowerPart1[calcBoundaryIndex(i, k, dimZ)] = getValue(i, 2, k);
-                }
-            }
-        } else {
-            #pragma omp parallel for collapse(2)
-            for (int i = 1; i < dimX - 1; ++i) {
-                for (int k = 1; k < dimZ - 1; ++k) {
-                    lowerPart1[calcBoundaryIndex(i, k, dimZ)] = getValue(i, 1, k);
-                }
+        #pragma omp parallel for collapse(2)
+        for (int j = 1; j < dimY - 1; ++j) {
+            for (int k = 1; k < dimZ - 1; ++k) {
+                rightPart1[calcBoundaryIndex(j, k, dimZ)] = getValue(rightBoundaryX, j, k);
             }
         }
 
-        if (startIndices[0] == 0) {
-            // std::cout << "CUNTleft" << std::endl;
-            #pragma omp parallel for collapse(2)
-            for (int j = 1; j < dimY - 1; ++j) {
-                for (int k = 1; k < dimZ - 1; ++k) {
-                    leftPart1[calcBoundaryIndex(j, k, dimZ)] = getValue(2, j, k);
-                }
-            }
-        } else {
-            #pragma omp parallel for collapse(2)
-            for (int j = 1; j < dimY - 1; ++j) {
-                for (int k = 1; k < dimZ - 1; ++k) {
-                    leftPart1[calcBoundaryIndex(j, k, dimZ)] = getValue(1, j, k);
-                }
+        #pragma omp parallel for collapse(2)
+        for (int j = 1; j < dimY - 1; ++j) {
+            for (int k = 1; k < dimZ - 1; ++k) {
+                leftPart1[calcBoundaryIndex(j, k, dimZ)] = getValue(leftBoundaryX, j, k);
             }
         }
 
@@ -154,15 +121,6 @@ public:
                 backPart1[calcBoundaryIndex(i, j, dimY)] = getValue(i, j, dimZ - 2);
             }
         }
-
-        // for (int j = 0; j < dimY; ++j) {
-        //     for (int k = 0; k < dimZ; ++k) {
-        //         std::cout << leftPart1[j * dimZ + k] << " ";
-        //     }
-        //     std::cout << std::endl;
-        // }
-
-        // std::cout << "FUCK" << std::endl;
     }
 
     void syncBoundary(const std::string &part) {
