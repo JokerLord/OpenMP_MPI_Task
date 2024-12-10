@@ -146,8 +146,6 @@ int main(int argc, char *argv[]) {
         curGrid.fillBoundary();
         sendBoundaries(gridComm, curGrid);
 
-        MPI_Barrier(MPI_COMM_WORLD);
-
         double maxError = gridUpdater.updateGrid(prevGrid, curGrid, nextGrid, t * timeStep, blockStartIndices);
         curTotalMaxError = std::max(curTotalMaxError, maxError);
 
@@ -156,8 +154,6 @@ int main(int argc, char *argv[]) {
             std::cout << t << " шаг:  Макс. ошибка: " << totalMaxError << std::endl;
         }
         
-        MPI_Barrier(MPI_COMM_WORLD);
-
         gridUpdater.move(prevGrid, curGrid);
         gridUpdater.move(curGrid, nextGrid);
     }
