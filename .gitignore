@@ -3,5 +3,7 @@ id_rsa_hpc.pub
 
 *.out
 *.txt
+*.pdf
+*.zip
 
 .vscode/
