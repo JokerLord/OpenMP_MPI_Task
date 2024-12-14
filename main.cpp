@@ -77,6 +77,13 @@ void sendBoundaries(MPI_Comm gridComm, Grid &prevGrid) {
     }
 }
 
+double parseLengthArgument(const std::string& arg) {
+    if (arg == "pi") {
+        return M_PI;
+    }
+    return std::stod(arg);
+}
+
 int main(int argc, char *argv[]) {
     MPI_Init(&argc, &argv);
     int procNum, procID;
@@ -85,9 +92,9 @@ int main(int argc, char *argv[]) {
 
     size_t spatialPointNum = std::stoi(argv[1]);
     size_t timePointNum = std::stoi(argv[2]);
-    double Lx = std::stod(argv[3]);
-    double Ly = std::stod(argv[4]);
-    double Lz = std::stod(argv[5]);
+    double Lx = parseLengthArgument(argv[3]);
+    double Ly = parseLengthArgument(argv[4]);
+    double Lz = parseLengthArgument(argv[5]);
     double T = std::stod(argv[6]);
 
     int procDims[3] = { 0, 0, 0 };
