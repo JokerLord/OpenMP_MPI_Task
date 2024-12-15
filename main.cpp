@@ -112,11 +112,12 @@ int main(int argc, char *argv[]) {
         size_t baseBlockSize = spatialPointNum / procDims[dim];
         size_t remainder = spatialPointNum % procDims[dim];
         
-        blockStartIndices[dim] = baseBlockSize * procCoords[dim];
-        blockEndIndices[dim] = baseBlockSize * (procCoords[dim] + 1);
-
-        if (procCoords[dim] == procDims[dim] - 1) {
-            blockEndIndices[dim] += remainder;
+        if (procCoords[dim] < remainder) {
+            blockStartIndices[dim] = procCoords[dim] * (baseBlockSize + 1);
+            blockEndIndices[dim] = blockStartIndices[dim] + baseBlockSize + 1;
+        } else {
+            blockStartIndices[dim] = procCoords[dim] * baseBlockSize + remainder;
+            blockEndIndices[dim] = blockStartIndices[dim] + baseBlockSize;
         }
 
         blockSize[dim] = blockEndIndices[dim] - blockStartIndices[dim];
