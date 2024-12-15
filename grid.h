@@ -16,12 +16,12 @@ public:
     double *values, *upperPart1, *lowerPart1, *frontPart1, *backPart1, *leftPart1, *rightPart1;
     double *upperPart2, *lowerPart2, *frontPart2, *backPart2, *leftPart2, *rightPart2;
 
-    Grid(size_t pointNum, double Lx, double Ly, double Lz, size_t sizeX, size_t sizeY, size_t sizeZ, size_t *blockStartIndices) {
+    Grid(size_t pointNum, double Lx, double Ly, double Lz, size_t *blockSize, size_t *blockStartIndices) {
         globalPointNum = pointNum;
 
-        dimX = sizeX;
-        dimY = sizeY;
-        dimZ = sizeZ;
+        dimX = blockSize[0];
+        dimY = blockSize[1];
+        dimZ = blockSize[2];
         stepX = Lx / ((double) pointNum - 1);
         stepY = Ly / ((double) pointNum - 1);
         stepZ = Lz / ((double) pointNum - 1);
@@ -54,10 +54,6 @@ public:
 
     double getValue(size_t x, size_t y, size_t z) const {
         return values[calcIndex(x, y, z)];
-    }
-
-    double* getPtr(size_t x, size_t y, size_t z) {
-        return &values[calcIndex(x, y, z)];
     }
 
     void setValue(size_t x, size_t y, size_t z, double value) {

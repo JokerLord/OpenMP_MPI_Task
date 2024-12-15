@@ -107,7 +107,7 @@ int main(int argc, char *argv[]) {
     int procCoords[3];
     MPI_Cart_coords(gridComm, procID, 3, procCoords);
 
-    size_t blockStartIndices[3], blockEndIndices[3], blockSize[3], paddedBlockSize[3];
+    size_t blockStartIndices[3], blockEndIndices[3], blockSize[3];
     for (int dim = 0; dim < 3; ++dim) {
         size_t baseBlockSize = spatialPointNum / procDims[dim];
         size_t remainder = spatialPointNum % procDims[dim];
@@ -120,7 +120,7 @@ int main(int argc, char *argv[]) {
         }
 
         blockSize[dim] = blockEndIndices[dim] - blockStartIndices[dim];
-        paddedBlockSize[dim] = blockSize[dim] + 2 ;
+        blockSize[dim] += 2 ;
     }
 
     double startTime = MPI_Wtime();
@@ -129,9 +129,9 @@ int main(int argc, char *argv[]) {
 
     GridUpdater gridUpdater(Lx, Ly, Lz, timeStep, spatialPointNum);
 
-    Grid prevGrid = Grid(spatialPointNum, Lx, Ly, Lz, paddedBlockSize[0], paddedBlockSize[1], paddedBlockSize[2], blockStartIndices);
-    Grid curGrid = Grid(spatialPointNum, Lx, Ly, Lz, paddedBlockSize[0], paddedBlockSize[1], paddedBlockSize[2], blockStartIndices);
-    Grid nextGrid = Grid(spatialPointNum, Lx, Ly, Lz, paddedBlockSize[0], paddedBlockSize[1], paddedBlockSize[2], blockStartIndices);
+    Grid prevGrid = Grid(spatialPointNum, Lx, Ly, Lz, blockSize, blockStartIndices);
+    Grid curGrid = Grid(spatialPointNum, Lx, Ly, Lz, blockSize, blockStartIndices);
+    Grid nextGrid = Grid(spatialPointNum, Lx, Ly, Lz, blockSize, blockStartIndices);
 
     gridUpdater.initializeGridT0(prevGrid, blockStartIndices);
     prevGrid.fillBoundary();
